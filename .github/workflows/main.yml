@@ -1,0 +1,35 @@
+name: Build driver
+on:
+  push:
+    branches:
+      - 'master'
+      - 'releases/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: actions/checkout@v3
+    - uses: pguyot/arm-runner-action@v2
+      with:
+        base_image: https://armbian.chi.auroradev.org/dl/orangepi4-lts/archive/Armbian_22.11.1_Orangepi4-lts_bullseye_current_5.15.80.img.xz
+        cpu: cortex-a7
+        commands: |
+            wget https://git.io/JJrEP -O install.sh
+            chmod +x install.sh 
+            ./install.sh
+
+    - name: Compress the release image
+      run: |
+        mv ${{ steps.build_image.outputs.image }} photon-orangepi-base.img
+        ls -la
+        xz -0 -T 0 -v photon-orangepi-base.img
+        ls -la
+    - name: Upload release image
+      uses: actions/upload-artifact@v2
+      with:
+        name: Orange Pi image
+        path: photon-orangepi-base.img.xz
