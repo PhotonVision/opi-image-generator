@@ -15,5 +15,5 @@ jobs:
           armbian_release: "trixie" # trixie
           armbian_target: "build"
           armbian_kernel_branch: "vendor"
-          armbian_ui: "server" # server xfce
+          armbian_ui: "minimal" # server xfce
           armbian_runner_clean: "yes" # recommended for Github runners
