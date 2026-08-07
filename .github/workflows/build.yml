@@ -1,11 +1,13 @@
 name: Build Armbian Images
 on:
+  release:
+    types: [created]  # published?
   push:
-    # branches:
-    #   - master
-    #   - main
-    tags:
-      - 'v*'
+    branches:
+      - master
+      - main
+    # tags:
+    #   - 'v*'
   pull_request:
   workflow_dispatch:
 
@@ -14,8 +16,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  clean:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Remove old Dev assets
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: 'Dev'
+          fail-if-no-assets: false
+          fail-if-no-release: false
+          assets: '*'
+
   build:
-    runs-on: ubuntu-latest # ubuntu-24.04-arm, ubuntu-24.04-riscv
+    runs-on: ubuntu-latest
+    needs: clean
     permissions:
       contents: write
     strategy:
@@ -32,18 +50,19 @@ jobs:
     env:
       ARMBIAN_ARTIFACTS: ${{ github.workspace }}/build/output/images/
     steps:
-      - uses: armbian/build@main
+      - name: Build Armbian Images and Release
+        uses: armbian/build@main
         id: build
         with:
           armbian_token: ${{ secrets.GITHUB_TOKEN }}
-          armbian_board: ${{ matrix.board }} # orangepi5 bananapif3
-          armbian_release: "trixie" # trixie
-          armbian_version: "26.5.2"
+          armbian_board: ${{ matrix.board }}
+          armbian_release: "trixie"
+          armbian_version: "26.5.3"
           armbian_target: "build"
           armbian_kernel_branch: "vendor"
-          armbian_ui: "minimal" # server xfce
-          armbian_runner_clean: "yes" # recommended for Github runners
-          armbian_release_tag:  ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Dev' }} 
+          armbian_ui: "minimal"
+          # armbian_runner_clean: "yes" # recommended for Github runners
+          armbian_release_tag:  ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Dev' }}
           armbian_release_title: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Dev' }}
           armbian_artifacts: ${{ env.ARMBIAN_ARTIFACTS }}
           armbian_release_prerelease: ${{ startsWith(github.ref, 'refs/tags/v') && 'false' || 'true' }}
@@ -51,6 +70,7 @@ jobs:
           armbian_download_repository: ""
         continue-on-error: true
       - uses: actions/upload-artifact@v7
+        name: Upload artifacts
         if: steps.build.outcome == 'failure'
         with:
           archive: false
