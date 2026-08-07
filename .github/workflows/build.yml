@@ -57,7 +57,7 @@ jobs:
           armbian_token: ${{ secrets.GITHUB_TOKEN }}
           armbian_board: ${{ matrix.board }}
           armbian_release: "trixie"
-          armbian_version: "v26.5.1"
+          # armbian_version: "26.5.1"
           armbian_target: "build"
           armbian_kernel_branch: "vendor"
           armbian_ui: "minimal"
