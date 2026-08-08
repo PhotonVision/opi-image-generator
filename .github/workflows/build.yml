@@ -28,7 +28,7 @@ jobs:
           if gh release view ${{ env.TAG }} --repo ${{ env.REPO }} > /dev/null 2>&1; then
             # if the tag exists, find all assets
             for asset in $(gh release view ${{ env.TAG }} --json assets --repo ${{ env.REPO }} --jq '.assets[].name'); do
-              if [[ ${{ github.ref_name}} == 'refs/heads/main' ]]; then
+              if [[ ${{ github.ref}} == 'refs/heads/main' ]]; then
                 # only delete assets for Dev release when running on main branch
                 echo "Deleting asset: $asset"
                 gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
