@@ -23,15 +23,20 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           echo "Removing old ${{ env.TAG }} assets"
-          for asset in $(gh release view ${{ env.TAG }} --json assets --repo ${{ env.REPO }} --jq '.assets[].name'); do
-            if [[ ${{ github.ref_name}} == 'refs/heads/main' ]]; then
-              # only delete assets for Dev release when running on main branch
-              echo "Deleting asset: $asset"
-              gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
-            else
-              echo "Not on main branch, skipping deletion of asset: $asset"
-            fi
-          done
+          # make sure that TAG exists as a release
+          if gh release view ${{ env.TAG }} --repo ${{ env.REPO }} > /dev/null 2>&1; then
+            for asset in $(gh release view ${{ env.TAG }} --json assets --repo ${{ env.REPO }} --jq '.assets[].name'); do
+              if [[ ${{ github.ref_name}} == 'refs/heads/main' ]]; then
+                # only delete assets for Dev release when running on main branch
+                echo "Deleting asset: $asset"
+                gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
+              else
+                echo "Not on main branch, skipping deletion of asset: $asset"
+              fi
+            done
+          else
+            echo "Release ${{ env.TAG }} does not exist, no assets to delete"
+          fi
 
   build:
     runs-on: ubuntu-latest
