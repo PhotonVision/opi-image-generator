@@ -4,10 +4,7 @@ on:
     types: [created]  # published?
   push:
     branches:
-      - master
       - main
-    # tags:
-    #   - 'v*'
   pull_request:
   workflow_dispatch:
 
@@ -18,18 +15,20 @@ concurrency:
 jobs:
   clean:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    # permissions:
+    #   contents: write
     steps:
       - name: Remove old Dev assets
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-        uses: mknejp/delete-release-assets@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: 'Dev'
-          fail-if-no-assets: false
-          fail-if-no-release: false
-          assets: '*'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: 'Dev'
+        run: |
+          echo "Removing old ${{ env.TAG }} assets"
+          for asset in $(gh release view ${{ env.TAG }} --json assets --jq '.assets[].name'); do
+            echo "Deleting asset: $asset"
+            gh release delete-asset ${{ env.TAG }} "$asset" --yes
+          done
 
   build:
     runs-on: ubuntu-latest
