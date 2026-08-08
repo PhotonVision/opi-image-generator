@@ -28,7 +28,10 @@ jobs:
           echo "Removing old ${{ env.TAG }} assets"
           for asset in $(gh release view ${{ env.TAG }} --json assets --repo ${{ env.REPO }} --jq '.assets[].name'); do
             echo "Deleting asset: $asset"
-            gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
+            if [[ ${{ github.ref_name}} == 'refs/heads/main' ]]; then
+              # only delete assets for Dev release when running on main branch
+              gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
+            fi
           done
 
   build:
