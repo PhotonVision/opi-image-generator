@@ -9,7 +9,6 @@ The workflow in [.github/workflows/build.yml](.github/workflows/build.yml) runs 
 This workflow builds for:
 - "orangepi5-max"
 - "orangepi5-plus"
-- "orangepi5-ultra"
 - "orangepi5"
 - "orangepi5b"
 - "orangepi5pro"
