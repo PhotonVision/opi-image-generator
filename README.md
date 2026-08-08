@@ -6,20 +6,29 @@ This repository uses GitHub Actions to build Armbian images for supported Orange
 
 The workflow in [.github/workflows/build.yml](.github/workflows/build.yml) runs the Armbian build action and produces image files for the configured target board.
 
-By default, it builds an image for the Orange Pi 5 board using the following settings:
+This workflow builds for:
+- "orangepi5-max"
+- "orangepi5-plus"
+- "orangepi5-ultra"
+- "orangepi5"
+- "orangepi5b"
+- "orangepi5pro"
+- "rock-5c"
+
+It builds images using the following settings:
 
 - Armbian release: `trixie`
 - Target: `build`
 - UI: `minimal`
 
-### Note
-The Armbian build system allows specification of `armbian_version`, but it will automatically increment the patch version by one from the one supplied.
+> [!IMPORTANT]
+> The Armbian build system does not provide a way to produce reproducible builds. Use a tagged release to create images that can be used as fixed basis for photon-image-modifier.
 
 ## How to create an image
 
 ### 1. Push changes to the main branch
 
-Pushing to `master` or `main` triggers a new build automatically. Images will be uploaded to the `Dev` tag and marked as pre-release.
+Pushing to `main` triggers a new build automatically. Images will be uploaded to the `Dev` tag and marked as pre-release. To keep the Dev tag clean, and consistent with HEAD, old assets that are stored in the Dev tag are deleted before the new images are uploaded.
 
 ### 2. Run the workflow manually
 

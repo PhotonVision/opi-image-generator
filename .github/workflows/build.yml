@@ -44,13 +44,13 @@ jobs:
       fail-fast: false
       matrix:
         board:
-          # - "orangepi5-max"
-          # - "orangepi5-plus"
-          # - "orangepi5-ultra"
+          - "orangepi5-max"
+          - "orangepi5-plus"
+          - "orangepi5-ultra"
           - "orangepi5"
-          # - "orangepi5b"
-          # - "orangepi5pro"
-          # - "rock-5c"
+          - "orangepi5b"
+          - "orangepi5pro"
+          - "rock-5c"
     env:
       ARMBIAN_ARTIFACTS: ${{ github.workspace }}/build/output/images/
     steps:
