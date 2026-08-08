@@ -19,7 +19,6 @@ jobs:
     #   contents: write
     steps:
       - name: Remove old Dev assets
-        # if: (github.event_name == 'push') && (github.ref == 'refs/heads/main')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: 'Dev'
@@ -27,10 +26,12 @@ jobs:
         run: |
           echo "Removing old ${{ env.TAG }} assets"
           for asset in $(gh release view ${{ env.TAG }} --json assets --repo ${{ env.REPO }} --jq '.assets[].name'); do
-            echo "Deleting asset: $asset"
             if [[ ${{ github.ref_name}} == 'refs/heads/main' ]]; then
               # only delete assets for Dev release when running on main branch
+              echo "Deleting asset: $asset"
               gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
+            else
+              echo "Not on main branch, skipping deletion of asset: $asset"
             fi
           done
 
