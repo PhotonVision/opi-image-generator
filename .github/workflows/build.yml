@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   pull_request:
   workflow_dispatch:
 
@@ -15,20 +17,28 @@ concurrency:
 jobs:
   clean:
     runs-on: ubuntu-latest
-    # permissions:
-    #   contents: write
     steps:
       - name: Remove old Dev assets
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: 'Dev'
+          REPO: ${{ github.repository }}
         run: |
-          echo "Removing old ${{ env.TAG }} assets"
-          for asset in $(gh release view ${{ env.TAG }} --json assets --jq '.assets[].name'); do
-            echo "Deleting asset: $asset"
-            gh release delete-asset ${{ env.TAG }} "$asset" --yes
-          done
+          echo "Checking for old ${{ env.TAG }} assets to delete"
+          if gh release view ${{ env.TAG }} --repo ${{ env.REPO }} > /dev/null 2>&1; then
+            # if the tag exists, find all assets
+            for asset in $(gh release view ${{ env.TAG }} --json assets --repo ${{ env.REPO }} --jq '.assets[].name'); do
+              if [[ ${{ github.ref_name}} == 'refs/heads/main' ]]; then
+                # only delete assets for Dev release when running on main branch
+                echo "Deleting asset: $asset"
+                gh release delete-asset ${{ env.TAG }} "$asset" --repo ${{ env.REPO }} --yes
+              else
+                echo "Not on main branch, skipping deletion of asset: $asset"
+              fi
+            done
+          else
+            echo "Release ${{ env.TAG }} does not exist, no assets to delete"
+          fi
 
   build:
     runs-on: ubuntu-latest
@@ -39,13 +49,12 @@ jobs:
       fail-fast: false
       matrix:
         board:
-          # - "orangepi5-max"
-          # - "orangepi5-plus"
-          # - "orangepi5-ultra"
           - "orangepi5"
-          # - "orangepi5b"
-          # - "orangepi5pro"
-          # - "rock-5c"
+          - "orangepi5b"
+          - "orangepi5pro"
+          - "orangepi5-max"
+          - "orangepi5-plus"
+          - "rock-5c"
     env:
       ARMBIAN_ARTIFACTS: ${{ github.workspace }}/build/output/images/
     steps:
@@ -56,18 +65,16 @@ jobs:
           armbian_token: ${{ secrets.GITHUB_TOKEN }}
           armbian_board: ${{ matrix.board }}
           armbian_release: "trixie"
-          # armbian_version: "26.5.1"
+          # armbian_version: "26.5.1" # this doesn't work. The build script will always use the latest version
           armbian_target: "build"
           armbian_kernel_branch: "vendor"
           armbian_ui: "minimal"
-          # armbian_runner_clean: "yes" # recommended for Github runners
+          # armbian_runner_clean: "yes" # the runners have a lot of disk space, so no need to clean up
           armbian_release_tag:  ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Dev' }}
           armbian_release_title: ${{ github.event.release.name || 'Dev release' }}
           armbian_artifacts: ${{ env.ARMBIAN_ARTIFACTS }}
           armbian_release_prerelease: ${{ startsWith(github.ref, 'refs/tags/v') && 'false' || 'true' }}
           armbian_release_body: ${{ github.event.release.body || 'Dev release' }}
-          armbian_download_base_url: ""
-          armbian_download_repository: ""
         continue-on-error: true
       - uses: actions/upload-artifact@v7
         name: Upload artifacts

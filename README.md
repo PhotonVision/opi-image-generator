@@ -6,31 +6,43 @@ This repository uses GitHub Actions to build Armbian images for supported Orange
 
 The workflow in [.github/workflows/build.yml](.github/workflows/build.yml) runs the Armbian build action and produces image files for the configured target board.
 
-By default, it builds an image for the Orange Pi 5 board using the following settings:
+This workflow builds for:
+- "orangepi5"
+- "orangepi5b"
+- "orangepi5pro"
+- "orangepi5-max"
+- "orangepi5-plus"
+- "rock-5c"
+
+It builds images using the following settings:
 
 - Armbian release: `trixie`
 - Target: `build`
 - UI: `minimal`
 
-### Note
-The Armbian build system allows specification of `armbian_version`, but it will automatically increment the patch version by one from the one supplied.
+> [!IMPORTANT]
+> The Armbian build system does not provide a way to produce reproducible builds. Use a tagged release to create images that can be used as fixed basis for photon-image-modifier.
 
-## How to create an image
+## Image creation:
 
-### 1. Push changes to the main branch
+### 1. Open or update a pull request
 
-Pushing to `master` or `main` triggers a new build automatically. Images will be uploaded to the `Dev` tag and marked as pre-release.
+The workflow runs on pull requests and will produce image(s) that are stored as assets attached to the workflow action. These assets are retained for 7 days.
 
-### 2. Run the workflow manually
+### 2. Merge a pull request to the main branch
 
-You can also start a build from the GitHub Actions tab:
+Merging a pull request to `main` triggers a new build automatically. Images and associated files are uploaded to the `Dev` tag and marked as pre-release. To keep the Dev tag clean and consistent with HEAD, old assets that are stored in the Dev tag are deleted before the new images are uploaded.
+
+### 3. Create a release
+
+Creating a release triggers the workflow. When triggered by a tag, it will place all images and associated files in the assets of the tagged release. Release builds are marked as a non-prerelease and the newest release will be marked as latest.
+
+### 4. Run the workflow manually
+
+You can start a build from the GitHub Actions tab:
 
 1. Open the repository on GitHub.
 2. Go to the Actions tab.
 3. Select the `Build Armbian Images` workflow.
 4. Click `Run workflow`.
 5. Choose the branch and start the run.
-
-### 3. Create a release
-
-Creating a release will also trigger the workflow. Release builds are marked as a non-prerelease, while regular branch builds are marked as prerelease builds.
