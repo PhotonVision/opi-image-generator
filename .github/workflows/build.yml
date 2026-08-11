@@ -82,3 +82,17 @@ jobs:
           path: ${{ env.ARMBIAN_ARTIFACTS }}/*.img.xz
           if-no-files-found: error
           retention-days: 7
+  
+  all-builds-passed:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ always() }}
+    steps:
+      - name: Check if all builds passed
+        run: |
+          if [[ ${{ needs.build.result }} == 'success' ]]; then
+            echo "All builds passed."
+          else
+            echo "Some builds failed."
+            exit 1
+          fi
