@@ -46,3 +46,7 @@ You can start a build from the GitHub Actions tab:
 3. Select the `Build Armbian Images` workflow.
 4. Click `Run workflow`.
 5. Choose the branch and start the run.
+
+## Image modifications:
+
+- Add line names for the GPIO lines so that they can be accessed [Add rk3588 line names overlay- #5](https://github.com/PhotonVision/opi-image-generator/pull/5)
