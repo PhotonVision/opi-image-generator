@@ -66,7 +66,9 @@ jobs:
         # The graft-opi-bootloader extension pulls the idbloader/U-Boot
         # proper sectors from this ubuntu-rockchip image (same base images
         # photon-image-modifier builds on) during post_build_image.
+        # No checkout step has run yet, so create the target dir first.
         run: |
+          mkdir -p userpatches/extensions/graft-opi-bootloader
           curl -fL --connect-timeout 30 --max-time 3600 \
             --retry 3 --retry-delay 5 --retry-all-errors \
             -o userpatches/extensions/graft-opi-bootloader/bootloader.img.xz \
