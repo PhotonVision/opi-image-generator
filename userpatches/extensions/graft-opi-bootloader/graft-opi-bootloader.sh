@@ -4,10 +4,14 @@
 # bootloader from a matching ubuntu-rockchip reference image.
 #
 # Armbian's U-Boot SPL/proper live in those sectors and chain-load from
-# SD/eMMC, which breaks SPI U-Boot boot. The workflow downloads a known working
-# ubuntu-rockchip image into this directory as bootloader.img.xz; this hook grafts its
-# idbloader and U-Boot proper into the sector range the old
-# zero-opi-bootloader extension used to zero.
+# SD/eMMC, which breaks SPI U-Boot boot. This hook downloads a known working
+# ubuntu-rockchip image for the current board into this directory as
+# bootloader.img.xz (if not already present) and grafts its idbloader and
+# U-Boot proper into the sector range the old zero-opi-bootloader extension
+# used to zero. Downloading here rather than in the workflow: the
+# armbian/build action checks out this repo into its own directory and wipes
+# anything pre-staged on the host, so a workflow-level download never
+# reaches the build container.
 function post_build_image__graft_bootloader_section() {
     local image="${FINAL_IMAGE_FILE}"
     local gpt_sectors=64
@@ -16,8 +20,25 @@ function post_build_image__graft_bootloader_section() {
     reference="${ext_dir}/bootloader.img.xz"
 
     if [[ ! -f "${reference}" ]]; then
-        echo "Reference bootloader image not found: ${reference}"
-        exit 1
+        local url
+        case "${BOARD}" in
+            orangepi5)      url="https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5.img.xz" ;;
+            orangepi5b)     url="https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5b.img.xz" ;;
+            orangepi5pro)   url="https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5-pro.img.xz" ;;
+            orangepi5-max)  url="https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5-max.img.xz" ;;
+            orangepi5-plus) url="https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5-plus.img.xz" ;;
+            rock-5c)        url="https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-rock-5c.img.xz" ;;
+            *)
+                echo "No reference bootloader image known for board '${BOARD}'"
+                exit 1
+                ;;
+        esac
+        echo "Downloading reference bootloader image for ${BOARD}"
+        # Write to a temp file so a failed download can't leave a truncated
+        # image behind that later builds would mistake for complete.
+        curl -fL --connect-timeout 30 --retry 3 --retry-delay 5 --retry-all-errors \
+            -o "${reference}.tmp" "${url}" \
+            && mv "${reference}.tmp" "${reference}"
     fi
 
     # Find partition geometry programmatically - offsets vary between images

@@ -46,35 +46,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - board: "orangepi5"
-            bootloader_image: "https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5.img.xz"
-          - board: "orangepi5b"
-            bootloader_image: "https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5b.img.xz"
-          - board: "orangepi5pro"
-            bootloader_image: "https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5-pro.img.xz"
-          - board: "orangepi5-max"
-            bootloader_image: "https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5-max.img.xz"
-          - board: "orangepi5-plus"
-            bootloader_image: "https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-orangepi-5-plus.img.xz"
-          - board: "rock-5c"
-            bootloader_image: "https://github.com/Joshua-Riek/ubuntu-rockchip/releases/download/v2.4.0/ubuntu-24.04-preinstalled-server-arm64-rock-5c.img.xz"
+        board:
+          - "orangepi5"
+          - "orangepi5b"
+          - "orangepi5pro"
+          - "orangepi5-max"
+          - "orangepi5-plus"
+          - "rock-5c"
     env:
       ARMBIAN_ARTIFACTS: ${{ github.workspace }}/build/output/images/
     steps:
-      - name: Download reference bootloader image
-        # The graft-opi-bootloader extension pulls the idbloader/U-Boot
-        # proper sectors from this ubuntu-rockchip image (same base images
-        # photon-image-modifier builds on) during post_build_image.
-        # The armbian/build action checks out this repo into custom/ and
-        # rsyncs custom/userpatches/ into the build container; anything
-        # outside custom/userpatches never reaches the extension.
-        run: |
-          mkdir -p custom/userpatches/extensions/graft-opi-bootloader
-          curl -fL --connect-timeout 30 --max-time 3600 \
-            --retry 3 --retry-delay 5 --retry-all-errors \
-            -o custom/userpatches/extensions/graft-opi-bootloader/bootloader.img.xz \
-            "${{ matrix.bootloader_image }}"
       - name: Build Armbian Images and Release
         uses: armbian/build@main
         id: build
