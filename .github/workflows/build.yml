@@ -66,12 +66,14 @@ jobs:
         # The graft-opi-bootloader extension pulls the idbloader/U-Boot
         # proper sectors from this ubuntu-rockchip image (same base images
         # photon-image-modifier builds on) during post_build_image.
-        # No checkout step has run yet, so create the target dir first.
+        # The armbian/build action checks out this repo into custom/ and
+        # rsyncs custom/userpatches/ into the build container; anything
+        # outside custom/userpatches never reaches the extension.
         run: |
-          mkdir -p userpatches/extensions/graft-opi-bootloader
+          mkdir -p custom/userpatches/extensions/graft-opi-bootloader
           curl -fL --connect-timeout 30 --max-time 3600 \
             --retry 3 --retry-delay 5 --retry-all-errors \
-            -o userpatches/extensions/graft-opi-bootloader/bootloader.img.xz \
+            -o custom/userpatches/extensions/graft-opi-bootloader/bootloader.img.xz \
             "${{ matrix.bootloader_image }}"
       - name: Build Armbian Images and Release
         uses: armbian/build@main
