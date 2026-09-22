@@ -47,19 +47,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # base opi5 is the only board that needs a transplanted bootloader
           - board: "orangepi5"
             extensions: "graft-opi-bootloader"
           - board: "orangepi5b"
-            extensions: "graft-opi-bootloader"
-          # opi5pro keeps Armbian's U-Boot, no bootloader graft
+            extensions: ""
           - board: "orangepi5pro"
             extensions: ""
           - board: "orangepi5-max"
-            extensions: "graft-opi-bootloader"
+            extensions: ""
           - board: "orangepi5-plus"
-            extensions: "graft-opi-bootloader"
+            extensions: ""
           - board: "rock-5c"
-            extensions: "graft-opi-bootloader"
+            extensions: ""
     env:
       ARMBIAN_ARTIFACTS: ${{ github.workspace }}/build/output/images/
     steps:
