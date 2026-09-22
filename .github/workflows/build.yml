@@ -46,13 +46,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        board:
-          - "orangepi5"
-          - "orangepi5b"
-          - "orangepi5pro"
-          - "orangepi5-max"
-          - "orangepi5-plus"
-          - "rock-5c"
+        include:
+          # base opi5 is the only board that needs a transplanted bootloader
+          - board: "orangepi5"
+            extensions: "graft-opi-bootloader"
+          - board: "orangepi5b"
+            extensions: ""
+          - board: "orangepi5pro"
+            extensions: ""
+          - board: "orangepi5-max"
+            extensions: ""
+          - board: "orangepi5-plus"
+            extensions: ""
+          - board: "rock-5c"
+            extensions: ""
     env:
       ARMBIAN_ARTIFACTS: ${{ github.workspace }}/build/output/images/
     steps:
@@ -67,6 +74,12 @@ jobs:
           armbian_target: "build"
           armbian_kernel_branch: "vendor"
           armbian_ui: "minimal"
+          # Replaces the U-Boot SPL/proper sectors between GPT and partition 1
+          # with the bootloader from the matching ubuntu-rockchip image in
+          # post_build_image, so SPI U-Boot boots the kernel directly.
+          # See userpatches/extensions/graft-opi-bootloader/
+          # Empty for orangepi5pro: it keeps Armbian's U-Boot.
+          armbian_extensions: ${{ matrix.extensions }}
           # armbian_runner_clean: "yes" # the runners have a lot of disk space, so no need to clean up
           armbian_release_tag:  ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Dev' }}
           armbian_release_title: ${{ github.event.release.name || 'Dev release' }}
